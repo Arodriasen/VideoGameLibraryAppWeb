@@ -52,6 +52,13 @@ export function sameBarcode(a: string | null, b: string | null): boolean {
   return digits(a) !== '' && digits(a) === digits(b);
 }
 
+/** Mismo texto que al compartir desde Android. */
+export function shareText(game: Game): string {
+  const year = game.year ? ` (${game.year})` : '';
+  const list = game.isWishlist ? 'en mi lista de deseos' : 'en mi colección';
+  return `${game.title} - ${game.platform}${year}, ${list} de Mi Colección de Juegos`;
+}
+
 /** Las fechas vienen de Postgres en hora local y sin zona: "2026-11-05 08:10:00.123456". */
 export function parseLocalDate(date: string): Date {
   return new Date(date.slice(0, 19).replace(' ', 'T'));

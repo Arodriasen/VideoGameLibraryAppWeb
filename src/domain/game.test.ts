@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { matchesSearch, parseLocalDate, sameBarcode, trashDaysLeftText, type Game } from './game';
+import { matchesSearch, parseLocalDate, sameBarcode, shareText, trashDaysLeftText, type Game } from './game';
 
 const game = { title: 'Pokémon Rojo', platform: 'Game Boy', genre: 'RPG' } as Game;
 
@@ -19,6 +19,20 @@ describe('matchesSearch', () => {
 
   it('descarta lo que no coincide', () => {
     expect(matchesSearch(game, 'zelda')).toBe(false);
+  });
+});
+
+describe('shareText', () => {
+  it('compone el texto de un juego de la colección', () => {
+    expect(shareText({ ...game, year: 1999, isWishlist: false })).toBe(
+      'Pokémon Rojo - Game Boy (1999), en mi colección de Mi Colección de Juegos',
+    );
+  });
+
+  it('indica la lista de deseos y omite el año si no hay', () => {
+    expect(shareText({ ...game, year: null, isWishlist: true })).toBe(
+      'Pokémon Rojo - Game Boy, en mi lista de deseos de Mi Colección de Juegos',
+    );
   });
 });
 

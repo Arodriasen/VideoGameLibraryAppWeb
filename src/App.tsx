@@ -12,9 +12,9 @@ import { TrashPage } from './ui/pages/TrashPage';
 const ScannerPage = lazy(() => import('./ui/pages/ScannerPage').then((module) => ({ default: module.ScannerPage })));
 
 function Routing() {
-  const { session, loading } = useAuth();
+  const { session, loading, recovering } = useAuth();
   if (loading) return null;
-  if (!session) return <LoginPage />;
+  if (!session || recovering) return <LoginPage />;
 
   return (
     <GamesProvider>

@@ -401,3 +401,5 @@ a.icon-button { text-decoration: none; }
 .trash-item__actions { display: flex; gap: 6px; margin-top: 6px; }
 .trash-item__actions .chip-button { flex: 1; min-height: 38px; }
 .chip-button--danger { color: var(--danger); }
+
+.link-button { min-height: 40px; border: 0; font-size: 0.92rem; color: var(--accent); background: transparent; }

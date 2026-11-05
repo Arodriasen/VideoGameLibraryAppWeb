@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { parseLocalDate, splitList, type Game } from '../../domain/game';
+import { parseLocalDate, shareText, splitList, type Game } from '../../domain/game';
 import { deleteGame, updateGame } from '../../infrastructure/gameApi';
 import { GameCover } from '../components/GameCover';
 import { Icon } from '../components/Icon';
@@ -34,6 +34,23 @@ export function GameDetailPage() {
     }
   }
 
+  /** Abre el menú Compartir del sistema; donde no exista, copia el texto. */
+  async function share(current: Game) {
+    const text = shareText(current);
+    setActionError(null);
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: current.title, text });
+      } else {
+        await navigator.clipboard.writeText(text);
+        setActionError('Texto copiado.');
+      }
+    } catch (e) {
+      // Cerrar el menú sin elegir nada también llega aquí, y no es un error.
+      if (!(e instanceof DOMException && e.name === 'AbortError')) setActionError('No se ha podido compartir.');
+    }
+  }
+
   function change(current: Game, changes: Partial<Game>) {
     void run(async () => saveLocally(await updateGame(current.id, changes)));
   }
@@ -57,9 +74,14 @@ export function GameDetailPage() {
         </button>
         <h1 className="topbar__title">Ficha</h1>
         {game && (
-          <Link className="icon-button" to={`/juego/${game.id}/editar`} aria-label="Editar">
-            <Icon name="edit" />
-          </Link>
+          <>
+            <button className="icon-button" aria-label="Compartir" onClick={() => void share(game)}>
+              <Icon name="share" />
+            </button>
+            <Link className="icon-button" to={`/juego/${game.id}/editar`} aria-label="Editar">
+              <Icon name="edit" />
+            </Link>
+          </>
         )}
       </header>
 

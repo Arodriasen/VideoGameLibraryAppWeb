@@ -2,6 +2,7 @@ import { AuthApiError } from '@supabase/supabase-js';
 import { useState, type FormEvent } from 'react';
 import { supabase } from '../../infrastructure/supabase';
 import { Icon } from '../components/Icon';
+import { ForgotPasswordForm } from './ForgotPasswordForm';
 
 function loginErrorMessage(error: unknown): string {
   if (error instanceof AuthApiError) {
@@ -16,6 +17,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [forgotPassword, setForgotPassword] = useState(false);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -36,35 +38,44 @@ export function LoginPage() {
         <Icon name="gamepad" size={38} />
       </div>
       <h1>Mi Colección</h1>
-      <p className="muted">Entra con la misma cuenta del escritorio y de Android.</p>
 
-      <form className="glass login__form" onSubmit={handleSubmit}>
-        <label className="field">
-          <span>Correo</span>
-          <input
-            type="email"
-            autoComplete="username"
-            autoCapitalize="none"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-          />
-        </label>
-        <label className="field">
-          <span>Contraseña</span>
-          <input
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-        </label>
-        {error && <p className="error-text">{error}</p>}
-        <button className="button" disabled={busy}>
-          {busy ? 'Entrando…' : 'Iniciar sesión'}
-        </button>
-      </form>
+      {forgotPassword ? (
+        <ForgotPasswordForm initialEmail={email} onBack={() => setForgotPassword(false)} />
+      ) : (
+        <>
+          <p className="muted">Entra con la misma cuenta del escritorio y de Android.</p>
+          <form className="glass login__form" onSubmit={handleSubmit}>
+            <label className="field">
+              <span>Correo</span>
+              <input
+                type="email"
+                autoComplete="username"
+                autoCapitalize="none"
+                required
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+              />
+            </label>
+            <label className="field">
+              <span>Contraseña</span>
+              <input
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+            </label>
+            {error && <p className="error-text">{error}</p>}
+            <button className="button" disabled={busy}>
+              {busy ? 'Entrando…' : 'Iniciar sesión'}
+            </button>
+            <button type="button" className="link-button" onClick={() => setForgotPassword(true)}>
+              ¿Olvidaste tu contraseña?
+            </button>
+          </form>
+        </>
+      )}
     </main>
   );
 }
