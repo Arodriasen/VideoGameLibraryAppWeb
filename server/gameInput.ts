@@ -23,6 +23,8 @@ const fields = {
   isWishlist: z.boolean(),
 };
 
+export const gameIdsSchema = z.object({ ids: z.array(z.number().int().positive()).min(1).max(1000) });
+
 export const newGameSchema = z.object(fields);
 export const gameChangesSchema = z.object(fields).partial();
 

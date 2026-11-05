@@ -6,6 +6,7 @@ import { GameCover } from '../components/GameCover';
 import { Icon } from '../components/Icon';
 import { useGames } from '../hooks/useGames';
 import { useGoBack } from '../hooks/useGoBack';
+import { shareOrCopy } from '../share';
 
 function formatAddedDate(date: string): string {
   const parsed = parseLocalDate(date);
@@ -34,21 +35,8 @@ export function GameDetailPage() {
     }
   }
 
-  /** Abre el menú Compartir del sistema; donde no exista, copia el texto. */
   async function share(current: Game) {
-    const text = shareText(current);
-    setActionError(null);
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: current.title, text });
-      } else {
-        await navigator.clipboard.writeText(text);
-        setActionError('Texto copiado.');
-      }
-    } catch (e) {
-      // Cerrar el menú sin elegir nada también llega aquí, y no es un error.
-      if (!(e instanceof DOMException && e.name === 'AbortError')) setActionError('No se ha podido compartir.');
-    }
+    setActionError(await shareOrCopy(current.title, shareText(current)));
   }
 
   function change(current: Game, changes: Partial<Game>) {

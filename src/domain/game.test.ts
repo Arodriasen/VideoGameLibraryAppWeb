@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { matchesSearch, parseLocalDate, sameBarcode, shareText, trashDaysLeftText, type Game } from './game';
+import {
+  matchesSearch,
+  parseLocalDate,
+  sameBarcode,
+  shareListText,
+  shareText,
+  trashDaysLeftText,
+  type Game,
+} from './game';
 
 const game = { title: 'Pokémon Rojo', platform: 'Game Boy', genre: 'RPG' } as Game;
 
@@ -32,6 +40,14 @@ describe('shareText', () => {
   it('indica la lista de deseos y omite el año si no hay', () => {
     expect(shareText({ ...game, year: null, isWishlist: true })).toBe(
       'Pokémon Rojo - Game Boy, en mi lista de deseos de Mi Colección de Juegos',
+    );
+  });
+});
+
+describe('shareListText', () => {
+  it('pone un juego por línea, con el total', () => {
+    expect(shareListText([{ ...game, year: 1999 }, { ...game, title: 'Tetris', year: null }])).toBe(
+      'Mi colección de juegos (2):\n• Pokémon Rojo - Game Boy (1999)\n• Tetris - Game Boy',
     );
   });
 });

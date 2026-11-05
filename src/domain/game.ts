@@ -59,6 +59,12 @@ export function shareText(game: Game): string {
   return `${game.title} - ${game.platform}${year}, ${list} de Mi Colección de Juegos`;
 }
 
+/** Mismo texto que al compartir varios juegos desde Android. */
+export function shareListText(games: Game[]): string {
+  const lines = games.map((game) => `• ${game.title} - ${game.platform}${game.year ? ` (${game.year})` : ''}`);
+  return `Mi colección de juegos (${games.length}):\n${lines.join('\n')}`;
+}
+
 /** Las fechas vienen de Postgres en hora local y sin zona: "2026-11-05 08:10:00.123456". */
 export function parseLocalDate(date: string): Date {
   return new Date(date.slice(0, 19).replace(' ', 'T'));

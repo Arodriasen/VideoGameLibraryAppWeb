@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { matchesSearch } from '../../domain/game';
+import { matchesSearch, shareListText } from '../../domain/game';
 import {
   activeFilterCount,
   filterOptions,
@@ -14,16 +14,22 @@ import {
   type GameFilters,
   type GameSort,
 } from '../../domain/gameFilter';
+import { deleteGames } from '../../infrastructure/gameApi';
 import { FilterSheet } from '../components/FilterSheet';
-import { GameCard } from '../components/GameCard';
 import { Icon } from '../components/Icon';
+import { SelectableCard } from '../components/SelectableCard';
 import { useGames } from '../hooks/useGames';
+import { shareOrCopy } from '../share';
 
 export function CollectionPage() {
-  const { games, error, collectionName, reload } = useGames();
+  const { games, error, collectionName, reload, removeLocally } = useGames();
   // Lista, búsqueda, filtros y orden van en la dirección, para seguir igual al volver de una ficha.
   const [params, setParams] = useSearchParams();
   const [filtersOpen, setFiltersOpen] = useState(false);
+  // null fuera del modo selección.
+  const [selectedIds, setSelectedIds] = useState<ReadonlySet<number> | null>(null);
+  const [selectionBusy, setSelectionBusy] = useState(false);
+  const [selectionMessage, setSelectionMessage] = useState<string | null>(null);
 
   const onWishlist = params.get('lista') === 'deseados';
   const search = params.get('q') ?? '';
@@ -50,10 +56,49 @@ export function CollectionPage() {
     [currentList, search, filters, sort],
   );
 
+  // Solo lo que se ve: un filtro no debe dejar juegos ocultos dentro de la selección.
+  const selectedGames = visible.filter((game) => selectedIds?.has(game.id));
+
+  function leaveSelection() {
+    setSelectedIds(null);
+    setSelectionMessage(null);
+  }
+
+  function toggleSelected(id: number) {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
+  }
+
+  async function shareSelected() {
+    setSelectionMessage(await shareOrCopy('Mi colección de juegos', shareListText(selectedGames)));
+  }
+
+  async function deleteSelected() {
+    const count = selectedGames.length;
+    const subject = count === 1 ? 'Se moverá 1 juego' : `Se moverán ${count} juegos`;
+    if (!window.confirm(`${subject} a la papelera. Podrás recuperarlos durante 7 días.`)) return;
+
+    setSelectionBusy(true);
+    setSelectionMessage(null);
+    try {
+      const moved = await deleteGames(selectedGames.map((game) => game.id));
+      moved.forEach(removeLocally);
+      leaveSelection();
+    } catch (e) {
+      setSelectionMessage(e instanceof Error ? e.message : 'No se han podido eliminar los juegos.');
+    } finally {
+      setSelectionBusy(false);
+    }
+  }
+
   const filterCount = activeFilterCount(filters);
   const listQuery = onWishlist ? '?lista=deseados' : '';
 
   function setList(wishlistTab: boolean) {
+    leaveSelection();
     // Las opciones de cada lista son distintas: los filtros de una no tienen por qué valer en la otra.
     const next = writeFilters(params, NO_FILTERS);
     if (wishlistTab) next.set('lista', 'deseados');
@@ -138,19 +183,56 @@ export function CollectionPage() {
       ) : (
         <section className="grid">
           {visible.map((game) => (
-            <GameCard key={game.id} game={game} />
+            <SelectableCard
+              key={game.id}
+              game={game}
+              selecting={selectedIds !== null}
+              selected={selectedIds?.has(game.id) ?? false}
+              onLongPress={(id) => setSelectedIds(new Set([id]))}
+              onToggle={toggleSelected}
+            />
           ))}
         </section>
       )}
 
-      <div className="fabs">
-        <Link className="fab fab--small" to={`/juego/nuevo${listQuery}`} aria-label="Añadir juego a mano">
-          <Icon name="plus" />
-        </Link>
-        <Link className="fab" to={`/escanear${listQuery}`} aria-label="Escanear código de barras">
-          <Icon name="scan" size={26} />
-        </Link>
-      </div>
+      {selectedIds ? (
+        <div className="selection-bar" role="toolbar" aria-label="Juegos seleccionados">
+          {selectionMessage && <p className="selection-bar__message">{selectionMessage}</p>}
+          <div className="selection-bar__row">
+            <span className="selection-bar__count">
+              {selectedGames.length === 1 ? '1 seleccionado' : `${selectedGames.length} seleccionados`}
+            </span>
+            <button
+              className="icon-button"
+              aria-label="Compartir seleccionados"
+              disabled={selectedGames.length === 0 || selectionBusy}
+              onClick={() => void shareSelected()}
+            >
+              <Icon name="share" />
+            </button>
+            <button
+              className="icon-button icon-button--danger"
+              aria-label="Eliminar seleccionados"
+              disabled={selectedGames.length === 0 || selectionBusy}
+              onClick={() => void deleteSelected()}
+            >
+              <Icon name="trash" />
+            </button>
+            <button className="icon-button" aria-label="Salir de la selección" onClick={leaveSelection}>
+              <Icon name="close" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="fabs">
+          <Link className="fab fab--small" to={`/juego/nuevo${listQuery}`} aria-label="Añadir juego a mano">
+            <Icon name="plus" />
+          </Link>
+          <Link className="fab" to={`/escanear${listQuery}`} aria-label="Escanear código de barras">
+            <Icon name="scan" size={26} />
+          </Link>
+        </div>
+      )}
 
       {filtersOpen && (
         <FilterSheet

@@ -160,6 +160,17 @@ export function gameRepository(query: QueryFn) {
       return rows.length > 0 ? toGame(rows[0]) : null;
     },
 
+    /** Una sola sentencia: o se mueven todos, o ninguno. Devuelve los que estaban activos. */
+    async moveManyToTrash(ids: number[], timeZone: string): Promise<number[]> {
+      const placeholders = ids.map((_, index) => `$${index + 2}`).join(', ');
+      const rows = await query(
+        `UPDATE "Games" SET "DeletedDate" = timezone($1::text, now())
+         WHERE "DeletedDate" IS NULL AND "Id" IN (${placeholders}) RETURNING "Id"`,
+        [timeZone, ...ids],
+      );
+      return rows.map((row) => row.Id as number);
+    },
+
     async getTrash(): Promise<TrashedGame[]> {
       const rows = await query(
         `SELECT ${GAME_COLUMNS}, "DeletedDate"::text AS "DeletedDate"

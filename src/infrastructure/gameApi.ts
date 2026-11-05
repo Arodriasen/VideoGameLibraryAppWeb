@@ -52,6 +52,12 @@ export async function deleteGame(id: number): Promise<void> {
   await apiFetch(`/api/games/${id}`, { method: 'DELETE' });
 }
 
+/** Devuelve los que se han movido a la papelera. */
+export async function deleteGames(ids: number[]): Promise<number[]> {
+  const response = await apiFetch('/api/games/trash', sendJson('POST', { ids }));
+  return ((await response.json()) as { moved: number[] }).moved;
+}
+
 export async function fetchTrash(): Promise<TrashedGame[]> {
   return (await apiFetch('/api/trash')).json() as Promise<TrashedGame[]>;
 }

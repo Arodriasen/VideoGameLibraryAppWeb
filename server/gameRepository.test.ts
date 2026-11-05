@@ -142,6 +142,26 @@ describe('gameRepository', () => {
     await expect(repository.update(other.id, { barcode: newGame.barcode })).rejects.toThrow(DuplicateBarcodeError);
   });
 
+  it('elimina varios juegos a la vez y no toca el resto', async () => {
+    const first = await repository.create({ ...newGame, barcode: null, title: 'Primero' }, null, 'UTC');
+    const second = await repository.create({ ...newGame, barcode: null, title: 'Segundo' }, null, 'UTC');
+    await repository.create({ ...newGame, barcode: null, title: 'Se queda' }, null, 'UTC');
+
+    const moved = await repository.moveManyToTrash([first.id, second.id], 'UTC');
+
+    expect(moved.toSorted()).toEqual([first.id, second.id].toSorted());
+    expect((await repository.getAll()).map((game) => game.title)).toEqual(['Se queda']);
+    expect(await repository.getTrash()).toHaveLength(2);
+  });
+
+  it('al eliminar varios ignora los que no existen o ya están en la papelera', async () => {
+    const trashed = await repository.create({ ...newGame, barcode: null }, null, 'UTC');
+    const active = await repository.create({ ...newGame, barcode: null }, null, 'UTC');
+    await repository.moveToTrash(trashed.id, 'UTC');
+
+    expect(await repository.moveManyToTrash([trashed.id, active.id, 9999], 'UTC')).toEqual([active.id]);
+  });
+
   it('la papelera lista lo eliminado, lo más reciente primero', async () => {
     const first = await repository.create({ ...newGame, barcode: null, title: 'Primero' }, null, 'UTC');
     const second = await repository.create({ ...newGame, barcode: null, title: 'Segundo' }, null, 'UTC');
