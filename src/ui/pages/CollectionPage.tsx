@@ -72,6 +72,9 @@ export function CollectionPage() {
           <Icon name="gamepad" size={20} />
         </span>
         <h1 className="topbar__title">{collectionName || 'Mi Colección'}</h1>
+        <Link className="icon-button" to="/estadisticas" aria-label="Estadísticas">
+          <Icon name="chart" />
+        </Link>
         <Link className="icon-button" to="/papelera" aria-label="Papelera">
           <Icon name="trash" />
         </Link>
