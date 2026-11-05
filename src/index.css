@@ -403,3 +403,8 @@ a.icon-button { text-decoration: none; }
 .chip-button--danger { color: var(--danger); }
 
 .link-button { min-height: 40px; border: 0; font-size: 0.92rem; color: var(--accent); background: transparent; }
+
+/* Ajustes */
+.form__section { margin-top: 8px; font-size: 1rem; color: var(--accent-strong); }
+.form__hint { margin-top: -6px; font-size: 0.8rem; color: var(--muted); }
+.topbar__title { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }

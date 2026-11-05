@@ -74,7 +74,38 @@ export async function lookupByName(name: string): Promise<GameCandidate[]> {
   return response.json() as Promise<GameCandidate[]>;
 }
 
+export interface AppSettings {
+  connectionString: string;
+  scanDexToken: string;
+  igdbClientId: string;
+  igdbClientSecret: string;
+  rawgApiKey: string;
+  theGamesDbApiKey: string;
+}
+
+export async function fetchSettings(): Promise<AppSettings> {
+  return (await apiFetch('/api/settings')).json() as Promise<AppSettings>;
+}
+
+export async function saveSettings(settings: AppSettings): Promise<void> {
+  await apiFetch('/api/settings', sendJson('PUT', settings));
+}
+
+export async function fetchCollectionName(): Promise<string> {
+  const { name } = (await (await apiFetch('/api/collection')).json()) as { name: string };
+  return name;
+}
+
+export async function saveCollectionName(name: string): Promise<void> {
+  await apiFetch('/api/collection', sendJson('PUT', { name }));
+}
+
 const COVER_CACHE = 'portadas-v1';
+
+/** Al cambiar de base de datos, las portadas guardadas podrían confundirse con las de otros juegos. */
+export async function clearCoverCache(): Promise<void> {
+  await caches.delete(COVER_CACHE).catch(() => undefined);
+}
 
 /**
  * Portada guardada en la base de datos. Se conserva en el móvil para no gastar la transferencia de

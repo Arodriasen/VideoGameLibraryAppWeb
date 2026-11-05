@@ -53,6 +53,22 @@ describe('gameRepository', () => {
     repository = gameRepository(async (text, params) => (await db.query(text, params)).rows as Record<string, unknown>[]);
   });
 
+  it('el nombre de la colección empieza vacío y se puede cambiar', async () => {
+    expect(await repository.getCollectionName()).toBe('');
+
+    await repository.setCollectionName('Mi estantería');
+    await repository.setCollectionName('La colección de casa');
+
+    expect(await repository.getCollectionName()).toBe('La colección de casa');
+  });
+
+  it('comprueba que la base de datos tiene colección', async () => {
+    await expect(repository.assertCollectionExists()).resolves.toBeUndefined();
+
+    await db.exec('DROP TABLE "Games"');
+    await expect(repository.assertCollectionExists()).rejects.toThrow();
+  });
+
   it('crea un juego con todos sus datos y su portada', async () => {
     const game = await repository.create(newGame, COVER, 'Europe/Madrid');
 

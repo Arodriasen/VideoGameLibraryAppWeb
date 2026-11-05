@@ -6,6 +6,7 @@ import { CollectionPage } from './ui/pages/CollectionPage';
 import { GameDetailPage } from './ui/pages/GameDetailPage';
 import { GameEditPage } from './ui/pages/GameEditPage';
 import { LoginPage } from './ui/pages/LoginPage';
+import { SettingsPage } from './ui/pages/SettingsPage';
 import { TrashPage } from './ui/pages/TrashPage';
 
 // Aparte, para no cargar el lector de códigos (casi 1 MB) hasta abrir el escáner.
@@ -22,6 +23,7 @@ function Routing() {
         <Suspense fallback={null}>
           <Routes>
             <Route path="/escanear" element={<ScannerPage />} />
+            <Route path="/ajustes" element={<SettingsPage />} />
             <Route path="/papelera" element={<TrashPage />} />
             <Route path="/juego/nuevo" element={<GameEditPage />} />
             <Route path="/juego/:id" element={<GameDetailPage />} />

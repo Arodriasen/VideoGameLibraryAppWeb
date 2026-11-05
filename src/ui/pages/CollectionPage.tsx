@@ -14,14 +14,13 @@ import {
   type GameFilters,
   type GameSort,
 } from '../../domain/gameFilter';
-import { supabase } from '../../infrastructure/supabase';
 import { FilterSheet } from '../components/FilterSheet';
 import { GameCard } from '../components/GameCard';
 import { Icon } from '../components/Icon';
 import { useGames } from '../hooks/useGames';
 
 export function CollectionPage() {
-  const { games, error, reload } = useGames();
+  const { games, error, collectionName, reload } = useGames();
   // Lista, búsqueda, filtros y orden van en la dirección, para seguir igual al volver de una ficha.
   const [params, setParams] = useSearchParams();
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -72,17 +71,13 @@ export function CollectionPage() {
         <span className="topbar__logo">
           <Icon name="gamepad" size={20} />
         </span>
-        <h1 className="topbar__title">Mi Colección</h1>
+        <h1 className="topbar__title">{collectionName || 'Mi Colección'}</h1>
         <Link className="icon-button" to="/papelera" aria-label="Papelera">
           <Icon name="trash" />
         </Link>
-        <button
-          className="icon-button"
-          aria-label="Cerrar sesión"
-          onClick={() => void supabase.auth.signOut({ scope: 'local' })}
-        >
-          <Icon name="logout" />
-        </button>
+        <Link className="icon-button" to="/ajustes" aria-label="Ajustes">
+          <Icon name="settings" />
+        </Link>
       </header>
 
       <div className="tabs" role="tablist">

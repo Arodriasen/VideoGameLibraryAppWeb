@@ -57,8 +57,32 @@ export function createGameRepository(connectionString: string) {
   return gameRepository((text, params) => sql.query(text, params) as Promise<Record<string, unknown>[]>);
 }
 
+/** Tabla de una sola fila; las otras apps la crean igual, sin migraciones, si aún no existe. */
+const ENSURE_COLLECTION_SETTINGS = `CREATE TABLE IF NOT EXISTS "CollectionSettings"
+  ("Id" integer PRIMARY KEY CHECK ("Id" = 1), "Name" text NOT NULL DEFAULT '')`;
+
 export function gameRepository(query: QueryFn) {
   return {
+    /** Falla si no se puede conectar o si esa base de datos no tiene colección. */
+    async assertCollectionExists(): Promise<void> {
+      await query(`SELECT 1 FROM "Games" LIMIT 1`);
+    },
+
+    async getCollectionName(): Promise<string> {
+      await query(ENSURE_COLLECTION_SETTINGS);
+      const rows = await query(`SELECT "Name" FROM "CollectionSettings" WHERE "Id" = 1`);
+      return (rows[0]?.Name as string | undefined) ?? '';
+    },
+
+    async setCollectionName(name: string): Promise<void> {
+      await query(ENSURE_COLLECTION_SETTINGS);
+      await query(
+        `INSERT INTO "CollectionSettings" ("Id", "Name") VALUES (1, $1)
+         ON CONFLICT ("Id") DO UPDATE SET "Name" = EXCLUDED."Name"`,
+        [name],
+      );
+    },
+
     async getAll(): Promise<Game[]> {
       const rows = await query(`SELECT ${GAME_COLUMNS} FROM "Games" WHERE "DeletedDate" IS NULL ORDER BY "Title"`);
       return rows.map(toGame);
