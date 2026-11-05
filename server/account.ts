@@ -41,14 +41,19 @@ export async function loadSettings(request: Request, env: Env): Promise<UserSett
       headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: authorization },
       signal: AbortSignal.timeout(15_000),
     });
-  } catch {
+  } catch (e) {
+    // Solo el tipo de fallo: la URL y las cabeceras no deben acabar en los logs.
+    console.error('Supabase: sin respuesta', e instanceof Error ? e.name : 'error');
     return error('El servicio de cuentas no responde. Inténtalo más tarde.', 502);
   }
 
   if (response.status === 401 || response.status === 403) {
     return error('Tu sesión ha caducado. Vuelve a iniciar sesión.', 401);
   }
-  if (!response.ok) return error('El servicio de cuentas no responde. Inténtalo más tarde.', 502);
+  if (!response.ok) {
+    console.error('Supabase: respuesta', response.status);
+    return error('El servicio de cuentas no responde. Inténtalo más tarde.', 502);
+  }
 
   const [row] = (await response.json()) as UserSettingsRow[];
   if (!row?.connection_string) {
